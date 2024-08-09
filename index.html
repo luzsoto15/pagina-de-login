@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login y Registro</title>
+    <style>
+        /* Estilo general del cuerpo */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background-image: url('background.png'); /* Añade la imagen de fondo */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #fff;
+        }
+
+        /* Contenedor del formulario */
+        .form-container {
+            background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 300px;
+        }
+
+        /* Estilos del formulario */
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .input-group input::placeholder {
+            color: #ccc;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input {
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #6a0dad;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #8e44ad;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-footer a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="register-form">
+            <h2>Registro</h2>
+            <div class="input-group">
+                <input type="text" id="register-username" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="register-password" placeholder="Contraseña" required>
+            </div>
+            <button type="submit">Registrar</button>
+        </form>
+        <br>
+        <form id="login-form">
+            <h2>Login</h2>
+            <div class="input-group">
+                <input type="text" id="login-username" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="login-password" placeholder="Contraseña" required>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember-me">
+                <label for="remember-me">Recordar</label>
+            </div>
+            <button type="submit">Login</button>
+            <div class="form-footer">
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <a href="#">Regístrate</a>
+            </div>
+        </form>
+    </div>
+    <script>
+        // Inicialización de la base de datos IndexedDB
+        let db;
+        const request = indexedDB.open('authDB', 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const store = db.createObjectStore('users', { keyPath: 'username' });
+            store.createIndex('username', 'username', { unique: true });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+        };
+
+        // Función para registrar usuarios
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+
+            const transaction = db.transaction(['users'], 'readwrite');
+            const store = transaction.objectStore('users');
+
+            store.add({ username: username, password: password }).onsuccess = function() {
+                alert('Usuario registrado con éxito');
+            };
+
+            transaction.onerror = function() {
+                alert('Error: El usuario ya existe');
+            };
+        });
+
+        // Función para el login de usuarios
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            const transaction = db.transaction(['users']);
+            const store = transaction.objectStore('users');
+
+            const request = store.get(username);
+
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user && user.password === password) {
+                    alert('Login exitoso');
+                } else {
+                    alert('Usuario o contraseña incorrectos');
+                }
+            };
+
+            request.onerror = function() {
+                alert('Error al iniciar sesión');
+            };
+        });
+    </script>
+</body>
+</html>
